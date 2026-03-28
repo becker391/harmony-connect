@@ -26,7 +26,7 @@ export function useWebRTC(socket: Socket | null, roomId: string | null, myUserId
       peersRef.current[remoteUserId].close();
     }
 
-    const pc = new RTCPeerConnection({ iceServers: ENV.ICE_SERVERS });
+    const pc = new RTCPeerConnection({ iceServers: [...ENV.ICE_SERVERS] });
     peersRef.current[remoteUserId] = pc;
 
     // Add local tracks
