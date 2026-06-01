@@ -6,12 +6,15 @@ import { useRoom } from '@/hooks/useRoom';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useChat } from '@/hooks/useChat';
 import { usePresenter } from '@/hooks/usePresenter';
+import { useReactions } from '@/hooks/useReactions';
 import VideoGrid from '@/components/room/VideoGrid';
 import ChatPanel from '@/components/room/ChatPanel';
 import RoomControls from '@/components/room/RoomControls';
 import RoomHeader from '@/components/room/RoomHeader';
+import ReactionsOverlay from '@/components/room/ReactionsOverlay';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Video, VideoOff, MonitorX } from 'lucide-react';
+
 
 export default function RoomPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +30,8 @@ export default function RoomPage() {
   } = useWebRTC(socket, id ?? null, user?.userId ?? '');
   const { messages, sendMessage } = useChat(socket, id ?? null);
   const presenter = usePresenter(socket, id ?? null, user?.userId ?? '', user?.username ?? '');
+  const { reactions, sendReaction } = useReactions(socket, id ?? null, user?.userId ?? '', user?.username ?? '');
+
 
   const [chatOpen,    setChatOpen]    = useState(false);
   const [showPrejoin, setShowPrejoin] = useState(true);
