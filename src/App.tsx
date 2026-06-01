@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SocketProvider } from "@/contexts/SocketContext";
 import LoginPage from "./pages/LoginPage";
 import LobbyPage from "./pages/LobbyPage";
 import RoomPage from "./pages/RoomPage";
@@ -19,7 +20,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
-
   return (
     <Routes>
       <Route path="/" element={isAuthenticated ? <Navigate to="/lobby" replace /> : <LoginPage />} />
@@ -30,15 +30,25 @@ function AppRoutes() {
   );
 }
 
+// Bridges AuthContext → SocketProvider so the socket token stays in sync
+function AppWithSocket() {
+  const { user } = useAuth();
+  return (
+    <SocketProvider token={user?.token ?? null}>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </SocketProvider>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <AppWithSocket />
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

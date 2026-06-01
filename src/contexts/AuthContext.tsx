@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { ENV } from '@/config/env';
 import type { UserCredentials } from '@/types/rtc';
 
 interface AuthContextValue {
   user: UserCredentials | null;
-  login: (username: string, token: string, userId: string) => void;
+  login: (username: string, password: string) => Promise<string | null>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -16,10 +17,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored ? JSON.parse(stored) : null;
   });
 
-  const login = useCallback((username: string, token: string, userId: string) => {
-    const creds: UserCredentials = { username, token, userId };
-    setUser(creds);
-    sessionStorage.setItem('rtc_user', JSON.stringify(creds));
+  const login = useCallback(async (username: string, password: string): Promise<string | null> => {
+    try {
+      const res = await fetch(`${ENV.API_BASE_URL}/auth/token/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return data?.detail ?? 'Invalid credentials';
+      }
+      const { access } = await res.json();
+      const payload = JSON.parse(atob(access.split('.')[1]));
+      const creds: UserCredentials = { username: payload.username ?? username, token: access, userId: String(payload.user_id) };
+      setUser(creds);
+      sessionStorage.setItem('rtc_user', JSON.stringify(creds));
+      return null;
+    } catch {
+      return 'Network error — is Django running?';
+    }
   }, []);
 
   const logout = useCallback(() => {
