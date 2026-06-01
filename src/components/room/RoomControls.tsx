@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Video, VideoOff, Monitor, MonitorOff, PhoneOff, MonitorX } from 'lucide-react';
 import type { MediaState } from '@/types/rtc';
 import type { PresenterState } from '@/hooks/usePresenter';
+import ReactionsPicker from './ReactionsPicker';
 
 interface RoomControlsProps {
   mediaState:     MediaState;
@@ -11,13 +12,15 @@ interface RoomControlsProps {
   onToggleAudio:  () => void;
   onToggleVideo:  () => void;
   onToggleScreen: () => void;
+  onSendReaction: (emoji: string) => void;
   onLeave:        () => void;
 }
 
 export default function RoomControls({
   mediaState, presenterState, myUserId,
-  onToggleAudio, onToggleVideo, onToggleScreen, onLeave,
+  onToggleAudio, onToggleVideo, onToggleScreen, onSendReaction, onLeave,
 }: RoomControlsProps) {
+
   const { presenterId, presenterName, requestPending } = presenterState;
   const iAmPresenting  = presenterId === myUserId && mediaState.screen;
   const someoneElse    = !!presenterId && presenterId !== myUserId;
@@ -75,8 +78,12 @@ export default function RoomControls({
         </div>
       </div>
 
+      {/* Reactions */}
+      <ReactionsPicker onPick={onSendReaction} />
+
       {/* Leave */}
       <Button
+
         variant="destructive"
         size="lg"
         onClick={onLeave}
