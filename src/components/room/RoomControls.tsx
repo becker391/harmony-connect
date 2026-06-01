@@ -1,6 +1,9 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Video, VideoOff, Monitor, MonitorOff, PhoneOff, MonitorX } from 'lucide-react';
+import {
+  Mic, MicOff, Video, VideoOff,
+  Monitor, MonitorOff, MonitorX,
+  PhoneOff, MoreHorizontal,
+} from 'lucide-react';
 import type { MediaState } from '@/types/rtc';
 import type { PresenterState } from '@/hooks/usePresenter';
 import ReactionsPicker from './ReactionsPicker';
@@ -16,82 +19,122 @@ interface RoomControlsProps {
   onLeave:        () => void;
 }
 
+// Single icon control button, Google Meet style
+function CtrlBtn({
+  label, active = true, danger = false, disabled = false,
+  children, onClick, tooltip,
+}: {
+  label:      string;
+  active?:    boolean;
+  danger?:    boolean;
+  disabled?:  boolean;
+  children:   React.ReactNode;
+  onClick:    () => void;
+  tooltip?:   string;
+}) {
+  return (
+    <div className="relative group flex flex-col items-center gap-1">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        title={tooltip ?? label}
+        type="button"
+        className={`
+          w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-150
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40
+          disabled:opacity-40 disabled:cursor-not-allowed
+          ${danger
+            ? 'bg-red-600 hover:bg-red-500 text-white'
+            : active
+              ? 'bg-[#3c4043] hover:bg-[#4a4d51] text-white'
+              : 'bg-[#ea4335] hover:bg-[#d33829] text-white'
+          }
+        `}
+      >
+        {children}
+      </button>
+      <span className="text-white/70 text-[10px] leading-tight select-none">{label}</span>
+    </div>
+  );
+}
+
 export default function RoomControls({
   mediaState, presenterState, myUserId,
   onToggleAudio, onToggleVideo, onToggleScreen, onSendReaction, onLeave,
 }: RoomControlsProps) {
-
   const { presenterId, presenterName, requestPending } = presenterState;
-  const iAmPresenting  = presenterId === myUserId && mediaState.screen;
-  const someoneElse    = !!presenterId && presenterId !== myUserId;
+  const iAmPresenting = presenterId === myUserId && mediaState.screen;
+  const someoneElse   = !!presenterId && presenterId !== myUserId;
 
-  // Label + icon for the screen button
-  let screenTitle = 'Share screen';
-  if (iAmPresenting)   screenTitle = 'Stop sharing';
-  else if (someoneElse) screenTitle = `Request to present`;
-  else if (requestPending) screenTitle = 'Waiting for approval…';
+  let screenLabel   = 'Present';
+  let screenTooltip = 'Share your screen';
+  if (iAmPresenting)   { screenLabel = 'Stop';    screenTooltip = 'Stop presenting'; }
+  else if (someoneElse){ screenLabel = 'Request'; screenTooltip = `Request to present (${presenterName} is presenting)`; }
+  else if (requestPending){ screenLabel = 'Waiting…'; screenTooltip = `Waiting for ${presenterName} to allow`; }
+
+  const ScreenIcon = iAmPresenting
+    ? MonitorOff
+    : someoneElse
+      ? MonitorX
+      : Monitor;
 
   return (
-    <div className="h-20 border-t border-border bg-card flex items-center justify-center gap-3 shrink-0 px-4">
-      {/* Mic */}
-      <Button
-        variant={mediaState.audio ? 'outline' : 'destructive'}
-        size="lg"
-        onClick={onToggleAudio}
-        className="w-12 h-12 rounded-full p-0"
-        title={mediaState.audio ? 'Mute' : 'Unmute'}
-      >
-        {mediaState.audio ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-      </Button>
+    // Dark bar matching the video area background
+    <div className="h-20 bg-[#202124] border-t border-white/5 flex items-center justify-between px-4 shrink-0">
 
-      {/* Camera */}
-      <Button
-        variant={mediaState.video ? 'outline' : 'destructive'}
-        size="lg"
-        onClick={onToggleVideo}
-        className="w-12 h-12 rounded-full p-0"
-        title={mediaState.video ? 'Turn off camera' : 'Turn on camera'}
-      >
-        {mediaState.video ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
-      </Button>
+      {/* ── Left spacer (keeps centre group truly centred) ── */}
+      <div className="w-28 hidden sm:block" />
 
-      {/* Screen share */}
-      <div className="relative group">
-        <Button
-          variant={iAmPresenting ? 'default' : someoneElse ? 'outline' : 'outline'}
-          size="lg"
-          onClick={onToggleScreen}
-          disabled={requestPending}
-          className="w-12 h-12 rounded-full p-0 disabled:opacity-50"
-          title={screenTitle}
+      {/* ── Centre: main controls ─────────────────────────── */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        {/* Mic */}
+        <CtrlBtn
+          label={mediaState.audio ? 'Mute' : 'Unmute'}
+          active={mediaState.audio}
+          onClick={onToggleAudio}
         >
-          {iAmPresenting
-            ? <MonitorOff className="w-5 h-5" />
-            : someoneElse
-              ? <MonitorX className="w-5 h-5 text-yellow-500" />
-              : <Monitor className="w-5 h-5" />
-          }
-        </Button>
-        {/* Tooltip */}
-        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 rounded bg-popover border border-border text-xs text-muted-foreground shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-          {screenTitle}
+          {mediaState.audio
+            ? <Mic    className="w-5 h-5" />
+            : <MicOff className="w-5 h-5" />}
+        </CtrlBtn>
+
+        {/* Camera */}
+        <CtrlBtn
+          label={mediaState.video ? 'Cam off' : 'Cam on'}
+          active={mediaState.video}
+          onClick={onToggleVideo}
+        >
+          {mediaState.video
+            ? <Video    className="w-5 h-5" />
+            : <VideoOff className="w-5 h-5" />}
+        </CtrlBtn>
+
+        {/* Present */}
+        <CtrlBtn
+          label={screenLabel}
+          tooltip={screenTooltip}
+          active={!iAmPresenting}
+          disabled={requestPending && !iAmPresenting}
+          onClick={onToggleScreen}
+        >
+          <ScreenIcon
+            className={`w-5 h-5 ${someoneElse && !iAmPresenting ? 'text-yellow-400' : ''}`}
+          />
+        </CtrlBtn>
+
+        {/* Reactions */}
+        <div className="flex flex-col items-center gap-1">
+          <ReactionsPicker onPick={onSendReaction} />
+          <span className="text-white/70 text-[10px] leading-tight select-none">React</span>
         </div>
       </div>
 
-      {/* Reactions */}
-      <ReactionsPicker onPick={onSendReaction} />
-
-      {/* Leave */}
-      <Button
-
-        variant="destructive"
-        size="lg"
-        onClick={onLeave}
-        className="w-12 h-12 rounded-full p-0"
-        title="Leave room"
-      >
-        <PhoneOff className="w-5 h-5" />
-      </Button>
+      {/* ── Right: leave ──────────────────────────────────── */}
+      <div className="flex items-center gap-3">
+        <CtrlBtn label="Leave" danger onClick={onLeave}>
+          <PhoneOff className="w-5 h-5" />
+        </CtrlBtn>
+      </div>
     </div>
   );
 }

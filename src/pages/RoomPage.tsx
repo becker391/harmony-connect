@@ -28,7 +28,7 @@ export default function RoomPage() {
     startMedia, toggleAudio, toggleVideo,
     startScreenShare, stopScreenShare, connectToPeers, cleanup,
   } = useWebRTC(socket, id ?? null, user?.userId ?? '');
-  const { messages, sendMessage } = useChat(socket, id ?? null);
+  const { messages, sendMessage } = useChat(socket, id ?? null, user?.token ?? null);
   const presenter = usePresenter(socket, id ?? null, user?.userId ?? '', user?.username ?? '');
   const { reactions, sendReaction } = useReactions(socket, id ?? null, user?.userId ?? '', user?.username ?? '');
 
@@ -167,7 +167,7 @@ export default function RoomPage() {
 
   // ── Room UI ─────────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-screen flex flex-col bg-[#202124] overflow-hidden">
       <RoomHeader
         roomId={id ?? ''}
         participantCount={participants.length}

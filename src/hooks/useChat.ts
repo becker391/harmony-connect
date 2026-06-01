@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ENV } from '@/config/env';
 import type { ChatMessage } from '@/types/rtc';
 
-export function useChat(socket: Socket | null, roomId: string | null) {
+export function useChat(socket: Socket | null, roomId: string | null, token: string | null = null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,18 +36,20 @@ export function useChat(socket: Socket | null, roomId: string | null) {
     if (!roomId) return;
 
     fetch(`${ENV.API_BASE_URL}/messages/?room_id=${encodeURIComponent(roomId)}`, {
-      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then(res => res.ok ? res.json() : [])
       .then((history: Array<{ sender_id: string; username: string; content: string; timestamp: string; client_message_id: string }>) => {
-        const mapped: ChatMessage[] = history.map(m => ({
-          messageId: m.client_message_id,
-          senderId: m.sender_id,
-          username: m.username,
-          content: m.content,
-          timestamp: m.timestamp,
-          roomId: roomId,
-        }));
+        const mapped: ChatMessage[] = history
+          .filter(m => !m.content.startsWith('__rtc:'))
+          .map(m => ({
+            messageId: m.client_message_id,
+            senderId:  m.sender_id,
+            username:  m.username,
+            content:   m.content,
+            timestamp: m.timestamp,
+            roomId:    roomId,
+          }));
         setMessages(mapped);
       })
       .catch(() => {});

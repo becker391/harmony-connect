@@ -27,7 +27,7 @@ export function SocketProvider({ token, children }: { token: string | null; chil
     }
 
     const s = io(ENV.SIGNALING_URL, {
-      auth: { token },
+      auth: { token, tenantId: ENV.TENANT_ID },
       transports: ['websocket'],
       reconnection: false,
     });
