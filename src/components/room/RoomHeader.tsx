@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Video, MessageSquare, Users, ArrowLeft, WifiOff, RefreshCw } from 'lucide-react';
+import { Video, MessageSquare, Users, ArrowLeft, WifiOff, RefreshCw, Maximize2, Minimize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface RoomHeaderProps {
@@ -16,6 +16,25 @@ export default function RoomHeader({
   roomId, participantCount, isConnected, onToggleChat, chatOpen, onReconnect,
 }: RoomHeaderProps) {
   const navigate = useNavigate();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (e) {
+      console.error('Fullscreen failed:', e);
+    }
+  };
 
   return (
     <header className="h-14 border-b border-border bg-card flex items-center px-4 justify-between shrink-0">
@@ -49,6 +68,16 @@ export default function RoomHeader({
             <RefreshCw className="w-3 h-3" />
           </button>
         )}
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleFullscreen}
+          className="gap-1.5"
+          title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </Button>
 
         <Button
           variant={chatOpen ? 'default' : 'outline'}

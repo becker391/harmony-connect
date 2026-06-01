@@ -63,3 +63,16 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 }
+
+@layer utilities {
+  @keyframes reaction-float-up {
+    0%   { transform: translateY(0)      scale(0.6); opacity: 0; }
+    15%  { transform: translateY(-40px)  scale(1.1); opacity: 1; }
+    80%  { transform: translateY(-70vh)  scale(1);   opacity: 1; }
+    100% { transform: translateY(-85vh)  scale(0.9); opacity: 0; }
+  }
+  .reaction-float {
+    animation: reaction-float-up 3.5s ease-out forwards;
+  }
+}
+
