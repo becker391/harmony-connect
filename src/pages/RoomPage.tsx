@@ -179,7 +179,7 @@ export default function RoomPage() {
 
       <div className="flex-1 flex overflow-hidden min-h-0">
         <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex-1 overflow-hidden min-h-0">
+          <div className="flex-1 overflow-hidden min-h-0 relative">
             <VideoGrid
               localStream={localStream}
               screenStream={screenStream}
@@ -190,6 +190,7 @@ export default function RoomPage() {
               mediaState={mediaState}
               presenterId={presenter.presenterId}
             />
+            <ReactionsOverlay reactions={reactions} />
           </div>
 
           <RoomControls
@@ -199,8 +200,10 @@ export default function RoomPage() {
             onToggleAudio={toggleAudio}
             onToggleVideo={toggleVideo}
             onToggleScreen={handleToggleScreen}
+            onSendReaction={sendReaction}
             onLeave={handleLeave}
           />
+
         </div>
 
         {chatOpen && (
